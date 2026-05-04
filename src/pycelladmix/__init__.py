@@ -3,6 +3,27 @@
 Python port of https://github.com/kharchenkolab/cellAdmix (Mitchel et al. 2025).
 """
 
+from .core import CellAdmixResult, run_celladmix
+from .crf import run_crf_all
+from .nmf import KNNNMFResult, run_knn_nmf
+from .scoring import (
+    ContaminationResult,
+    estimate_cell_adjacency,
+    estimate_cell_type_adjacency,
+    estimate_contamination_scores,
+)
+
 __version__ = "0.0.1"
 
-__all__ = ["__version__"]
+__all__ = [
+    "CellAdmixResult",
+    "ContaminationResult",
+    "KNNNMFResult",
+    "__version__",
+    "estimate_cell_adjacency",
+    "estimate_cell_type_adjacency",
+    "estimate_contamination_scores",
+    "run_celladmix",
+    "run_crf_all",
+    "run_knn_nmf",
+]
