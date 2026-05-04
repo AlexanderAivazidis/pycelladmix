@@ -93,7 +93,12 @@ select = [
     "UP",  # pyupgrade
     "N",   # pep8-naming
 ]
-ignore = ["E501"]
+ignore = [
+    "E501",  # line length (handled by formatter)
+    "N803",  # uppercase argument names — used for matrix/tensor variables (X, W, H, ...)
+    "N806",  # uppercase locals — same reason
+    "F722",  # forward-annotation syntax error — false positive for jaxtyping shape strings
+]
 
 [tool.ruff.format]
 quote-style = "double"
