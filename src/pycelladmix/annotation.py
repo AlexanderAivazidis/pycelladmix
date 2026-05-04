@@ -213,7 +213,136 @@ def run_membrane_test(*args, **kwargs):
     )
 
 
+def aggregate_to_admix_prior(
+    df: pd.DataFrame,
+    W_per_molecule: Float[Array, "n k"],
+    mol_ids: np.ndarray,
+    H: Float[Array, "k g"],
+    gene_names: Sequence[str],
+    admixture_factors: Mapping[str, Sequence[int]],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Aggregate per-molecule factor loadings into a per-cell admixture prior.
+
+    For the Stormi spatial-prior integration. Given:
+
+    * ``W_per_molecule``: soft per-molecule loadings (from
+      :func:`pycelladmix.nmf.run_knn_nmf` or
+      :func:`pycelladmix.nmf.project_per_molecule_loadings`),
+    * ``H``: the factor-by-gene basis (typically frozen from the subsample fit),
+    * ``admixture_factors``: a ``cell_type -> list[factor_id]`` mapping (1-indexed
+      factor ids, matching :func:`factors_to_remove_per_celltype`),
+
+    this returns:
+
+    1. ``W_admix``: per-cell loading on each admixture factor,
+       shape ``(n_cells, k_admix)``. For cell ``c`` of cell-type ``t``, entry
+       ``W_admix[c, j]`` is the *sum* over molecules ``i`` in ``c`` of
+       ``W_per_molecule[i, factor_idx_of_j]``, but **only if factor ``j`` is
+       flagged as admixture for cell-type ``t``**; otherwise zero.
+    2. ``H_admix``: the rows of ``H`` corresponding to factors that appear in
+       any admixture set, shape ``(k_admix, n_genes)``.
+
+    The product ``W_admix @ H_admix`` gives expected admixture counts per cell
+    per gene and can be subtracted from observed counts via
+    :func:`pycelladmix.correction.cleaned_counts_matrix`, or fed into Stormi as
+    a refinable prior.
+
+    Parameters
+    ----------
+    df
+        Transcript-level dataframe. Must have a ``celltype`` column so we
+        know which admixture-factor list applies to each cell.
+    W_per_molecule
+        ``(n_molecules, k)`` soft per-molecule factor loadings.
+    mol_ids
+        Molecule ids in row order of ``W_per_molecule``.
+    H
+        ``(k, n_genes)`` factor-by-gene basis.
+    gene_names
+        Gene names matching the columns of ``H``.
+    admixture_factors
+        ``cell_type -> list[int]`` (1-indexed factor ids).
+
+    Returns
+    -------
+    W_admix : ndarray, ``(n_cells, k_admix)``
+    H_admix : ndarray, ``(k_admix, n_genes)``
+    cell_names : ndarray of cell ids in row order of ``W_admix``
+    gene_names_out : ndarray (== ``np.asarray(gene_names)``, for convenience)
+    admix_factor_ids : ndarray of 1-indexed factor ids in column order of
+        ``W_admix`` and row order of ``H_admix``
+    """
+    if "celltype" not in df.columns:
+        raise ValueError("`df` must have a `celltype` column for per-cell-type masking.")
+
+    admix_factor_ids = np.asarray(
+        sorted({int(f) for fs in admixture_factors.values() for f in fs}), dtype=np.int64
+    )
+    if admix_factor_ids.size == 0:
+        raise ValueError("`admixture_factors` does not contain any factor ids.")
+    H_np = np.asarray(H, dtype=np.float64)
+    H_admix = H_np[admix_factor_ids - 1]  # convert 1-indexed to 0-indexed
+
+    W_np = np.asarray(W_per_molecule, dtype=np.float32)
+    if W_np.shape[0] != len(mol_ids):
+        raise ValueError(
+            f"W_per_molecule has {W_np.shape[0]} rows but mol_ids has {len(mol_ids)} entries."
+        )
+    df_idx = df.set_index("mol_id").reindex(np.asarray(mol_ids))
+    if df_idx["cell"].isna().any():
+        missing = int(df_idx["cell"].isna().sum())
+        raise ValueError(
+            f"{missing} mol_ids in `mol_ids` are not present in `df`. "
+            "Did you pass the right transcript dataframe?"
+        )
+
+    cell_of_mol = df_idx["cell"].to_numpy()
+
+    cell_names = np.asarray(sorted(pd.unique(df_idx["cell"])))
+    cell_to_idx = {c: i for i, c in enumerate(cell_names.tolist())}
+    factor_to_col = {int(f): j for j, f in enumerate(admix_factor_ids.tolist())}
+
+    cell_type = (
+        df.drop_duplicates("cell").set_index("cell")["celltype"].reindex(cell_names).to_numpy()
+    )
+
+    n_cells = len(cell_names)
+    k_admix = admix_factor_ids.size
+    W_admix = np.zeros((n_cells, k_admix), dtype=np.float64)
+
+    cell_idx_per_mol = np.asarray([cell_to_idx[c] for c in cell_of_mol])
+
+    for j, factor_id in enumerate(admix_factor_ids.tolist()):
+        col_W = W_np[:, int(factor_id) - 1]  # 1-indexed -> 0-indexed
+        contrib = np.zeros(n_cells, dtype=np.float64)
+        np.add.at(contrib, cell_idx_per_mol, col_W)
+        W_admix[:, j] = contrib
+
+    keep_mask = np.zeros((n_cells, k_admix), dtype=bool)
+    for t, factor_list in admixture_factors.items():
+        rows = np.flatnonzero(cell_type == t)
+        if rows.size == 0:
+            continue
+        cols = np.asarray(
+            [factor_to_col[int(f)] for f in factor_list if int(f) in factor_to_col],
+            dtype=np.int64,
+        )
+        if cols.size == 0:
+            continue
+        keep_mask[np.ix_(rows, cols)] = True
+    W_admix = np.where(keep_mask, W_admix, 0.0)
+
+    return (
+        W_admix.astype(np.float32),
+        H_admix.astype(np.float32),
+        cell_names,
+        np.asarray(list(gene_names)),
+        admix_factor_ids.astype(np.int64),
+    )
+
+
 __all__ = [
+    "aggregate_to_admix_prior",
     "factors_to_remove_per_celltype",
     "run_bridge_test",
     "run_enrichment_test",

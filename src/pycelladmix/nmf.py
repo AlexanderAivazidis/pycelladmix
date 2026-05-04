@@ -357,10 +357,96 @@ def project_nmf(
     return jnp.asarray(H_full), gene_names_full
 
 
+def project_per_molecule_loadings(
+    df: pd.DataFrame,
+    H: Float[Array, "k g"],
+    gene_names: Sequence[str],
+    h: int = 20,
+    include_self: bool = True,
+    progress: bool = False,
+) -> tuple[Float[Array, "n k"], np.ndarray]:
+    """Score every molecule in ``df`` against a fixed factor basis ``H``.
+
+    For the **subsample-and-project workflow** at large scale: fit ``H`` on a
+    representative subsample with :func:`run_knn_nmf`, then call this to
+    assign per-molecule factor loadings on the full dataset without re-fitting
+    NMF.
+
+    For each molecule ``i`` (in cell ``c``) we KNN-aggregate within ``c``
+    exactly as in :func:`run_knn_nmf`, producing a sparse ``(n_genes,)`` count
+    vector ``x_i``. Then we project onto ``H`` via the closed-form pseudoinverse:
+
+        W[i, :]  =  ReLU(x_i  @  H.T  @  inv(H @ H.T))
+
+    This is much cheaper than per-molecule NNLS (one pseudoinverse computed
+    once, then a sparse matmul over the full dataset) and gives essentially
+    the same result for the small-``k``, sparse-``x_i`` regime that arises
+    here. Negative entries are clipped to 0 so loadings stay non-negative.
+
+    Cells with ``<= h`` molecules are skipped.
+
+    Parameters
+    ----------
+    df
+        Transcript-level dataframe. Must include the standard columns
+        (see :func:`pycelladmix.utils.validate_transcripts`).
+    H
+        Factor-by-gene loading matrix, shape ``(k, n_genes)``. Typically
+        ``KNNNMFResult.H`` from a subsample fit.
+    gene_names
+        Gene names matching the columns of ``H``. Genes in ``df`` not in
+        ``gene_names`` are silently ignored (their molecules contribute zero
+        rows to ``x_i``, but the molecule still gets a loading from its KNN
+        neighbours' contributions).
+    h
+        KNN neighbourhood size. Should typically match the ``h`` used to fit
+        ``H``, though doesn't have to.
+    include_self
+        Whether each molecule is its own first KNN neighbour.
+    progress
+        If ``True``, prints a progress message every 5 000 cells.
+
+    Returns
+    -------
+    W_full
+        Per-molecule loadings, shape ``(n_full_mols, k)``, jnp array.
+    mol_ids
+        Molecule ids in row order of ``W_full``.
+    """
+    validate_transcripts(df)
+    H_np = np.asarray(H, dtype=np.float64)
+    k = H_np.shape[0]
+    eps = 1e-12
+    H_pinv = H_np.T @ np.linalg.inv(H_np @ H_np.T + eps * np.eye(k))  # (n_genes, k)
+
+    df = df[df["gene"].isin(set(gene_names))].copy()
+    keep_cells = cells_with_min_molecules(df, h + 1)
+    df_kept = df[df["cell"].isin(keep_cells)]
+    if df_kept.empty:
+        raise ValueError(
+            f"After filtering to genes in `gene_names` and cells with > {h} molecules, "
+            "no cells remain. Lower h or check gene-name alignment."
+        )
+
+    matrices: list[sparse.csr_matrix] = []
+    mol_ids_per_cell: list[np.ndarray] = []
+    for i, (_, df_cell) in enumerate(df_kept.groupby("cell", sort=False)):
+        cm = cell_knn_count_matrix(df_cell, k=h, gene_names=gene_names, include_self=include_self)
+        matrices.append(cm)
+        mol_ids_per_cell.append(df_cell["mol_id"].to_numpy())
+        if progress and (i + 1) % 5000 == 0:
+            print(f"  projected {i + 1:,} cells")
+
+    X, mol_ids = stack_cell_count_matrices(matrices, mol_ids_per_cell)
+    W_full = np.maximum(X.dot(H_pinv), 0.0).astype(np.float32)
+    return jnp.asarray(W_full), mol_ids
+
+
 __all__ = [
     "KNNNMFResult",
     "fit_nmf",
     "get_knn_counts_all",
     "project_nmf",
+    "project_per_molecule_loadings",
     "run_knn_nmf",
 ]

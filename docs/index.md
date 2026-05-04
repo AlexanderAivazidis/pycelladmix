@@ -25,6 +25,7 @@ installation
 tutorials/01_quickstart
 tutorials/02_factor_annotation
 tutorials/03_real_data_merfish
+tutorials/04_scale_workflow
 api
 ```
 
