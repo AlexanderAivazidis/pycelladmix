@@ -12,7 +12,7 @@ In imaging-based spatial transcriptomics (Xenium, MERSCOPE, CosMx, …), each de
 
 `cellAdmix` factorises spatial neighbourhoods of molecules with NMF, smooths factor assignments with a CRF, and tests which factors represent admixture (vs. native expression) using boundary-crossing, membrane-signal, and marker-enrichment statistics. Per-cell admixture scores are then computed against an scRNA-seq reference and a spatial cell-type adjacency graph.
 
-`pycelladmix` is a Python re-implementation built around `AnnData` for compatibility with the [scverse](https://scverse.org) ecosystem (`scanpy`, `squidpy`, `spatialdata`). The numerically heavy stages (NMF factorisation, loopy belief propagation for CRF inference, permutation tests) are written in **JAX** and **numpyro**, JIT-compiled, and `vmap`-ed across cells / restarts / permutations so they can run on GPU. Performance has not been benchmarked against the R reference; head-to-head numbers are pending.
+`pycelladmix` is a Python re-implementation built around `AnnData` for compatibility with the [scverse](https://scverse.org) ecosystem (`scanpy`, `squidpy`, `spatialdata`). The numerically heavy stages (NMF factorisation, loopy belief propagation for CRF inference, permutation tests) are written in **JAX** and **numpyro**, JIT-compiled, and `vmap`-ed across cells / restarts / permutations so they can run on GPU.
 
 The [original R package](https://github.com/kharchenkolab/cellAdmix) is the reference implementation — please cite their paper and use it if you want the canonical behaviour.
 
