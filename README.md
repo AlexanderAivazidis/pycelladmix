@@ -34,7 +34,37 @@ uv sync --extra gpu     # GPU
 
 ## Quickstart
 
-*Coming soon — see the tutorials once the first release lands.*
+```python
+import pycelladmix
+
+# `df` is a per-molecule dataframe with columns: x, y, z, gene, cell, celltype, mol_id
+# Reference scRNA-seq counts (genes × cells), per-cell type annotation, and gene names
+# are optional — without them the pipeline runs NMF + CRF only and the user can compute
+# scores separately.
+
+res = pycelladmix.run_celladmix(
+    df,
+    k=8,                    # NMF rank
+    h_nmf=20,               # KNN neighbourhood size for NMF aggregation
+    h_crf=10,               # KNN neighbourhood size for the CRF graph
+    cm_rna=cm_rna,          # optional: scRNA-seq reference counts
+    annot_rna=annot_rna,    # optional: cell id → cell type
+    rna_gene_names=genes,   # optional: gene names for cm_rna
+)
+
+# Results:
+res.nmf.W                                       # (n_molecules, k) factor loadings
+res.nmf.H                                       # (k, n_genes)    gene loadings
+res.crf                                         # mol_id → factor (CRF MAP labels)
+res.contamination.cell_admixture_fractions      # per-cell admixture score
+res.contamination.contamination_probs           # per-gene per-cell-type P(contamination)
+```
+
+Three executed end-to-end tutorials are bundled, including a validation on real MERFISH data:
+
+- [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) — synthetic 3-cell-type data with simulated admixture; verifies the contaminated cells are recovered.
+- [`notebooks/02_factor_annotation.ipynb`](notebooks/02_factor_annotation.ipynb) — marker-enrichment permutation test for identifying admixture factors *without* an scRNA-seq reference.
+- [`notebooks/03_real_data_merfish.ipynb`](notebooks/03_real_data_merfish.ipynb) — real MERFISH mouse hypothalamus data (Moffitt et al. 2018, fetched via `squidpy.datasets.merfish`); validates that the unsupervised pipeline recovers the published cell-class structure.
 
 ## Credits
 
