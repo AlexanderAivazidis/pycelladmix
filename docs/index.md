@@ -2,8 +2,12 @@
 
 Python port of [`cellAdmix`](https://github.com/kharchenkolab/cellAdmix) — identify and correct cell admixtures in imaging-based spatial transcriptomics.
 
+```{note}
+**Independent community port.** Not endorsed by the original `cellAdmix` authors. The R package by Mitchel, Petukhov, Gao, and Kharchenko is the reference implementation; please cite their paper. Algorithm questions go to the R repo; bugs in this port go to [this repo's issue tracker](https://github.com/AlexanderAivazidis/pycelladmix/issues).
+```
+
 ```{warning}
-**Alpha.** API is stabilising; expect minor breaking changes before 0.1.
+**Alpha.** API is stabilising; expect minor breaking changes before 0.2.
 ```
 
 The pipeline runs in four stages, all numerically heavy ones in **JAX** (GPU-first):
