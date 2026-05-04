@@ -9,8 +9,8 @@ Three complementary tests, each mirroring a function in the R package:
 A false-positive filter (``check_f_rm``) reconciles the three before
 returning the final removal list.
 
-Permutation tests run all replicates in a single JAX ``vmap`` on GPU — the
-single largest speed-up over the R reference, which loops permutations on CPU.
+Permutation tests run all replicates in a single JAX ``vmap`` so they can run
+in parallel on GPU.
 
 Status notes
 ------------

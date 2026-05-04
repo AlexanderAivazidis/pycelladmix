@@ -10,7 +10,7 @@ Python port of [`cellAdmix`](https://github.com/kharchenkolab/cellAdmix) — ide
 **Alpha.** API is stabilising; expect minor breaking changes before 0.2.
 ```
 
-The pipeline runs in four stages, all numerically heavy ones in **JAX** (GPU-first):
+The pipeline runs in four stages; the numerically heavy ones are written in **JAX** so they can run on GPU:
 
 1. **KNN-NMF** — for each cell, build a KNN-aggregated count matrix; stack across cells; factor with rank-k NMF (Frobenius or weighted `ls-nmf`). 30 random restarts run in parallel via `vmap`.
 2. **CRF** — assign each molecule to one of the `k` factors using max-product loopy belief propagation over the molecule-KNN graph. Per-cell graphs are unioned into one disconnected graph for a single JIT-compiled BP routine.

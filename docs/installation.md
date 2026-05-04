@@ -10,7 +10,7 @@ pip install pycelladmix
 pip install "pycelladmix[gpu]"
 ```
 
-The default install pulls plain JAX (CPU). Add the `[gpu]` extra to bring in `jax[cuda12]` for GPU acceleration. The package is intended primarily for high-performance use on GPU clusters; for small-scale work the [original R package](https://github.com/kharchenkolab/cellAdmix) is also a fine choice.
+The default install pulls plain JAX (CPU). Add the `[gpu]` extra to bring in `jax[cuda12]` for GPU acceleration on supported hardware. The [original R package](https://github.com/kharchenkolab/cellAdmix) remains the reference implementation.
 
 ## Requirements
 

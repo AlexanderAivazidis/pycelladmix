@@ -311,7 +311,7 @@ The pipeline ran end-to-end on synthetic data and the per-cell admixture score s
 
 - **Real data**: replace the synthetic transcript dataframe with a Xenium / MERSCOPE / CosMx output (one row per detected molecule with x/y/z/gene/cell columns). The interface is identical.
 - **Annotation tests**: `pycelladmix.annotation` exposes the bridge / membrane / enrichment tests for explicit factor-vs-cell-type hypothesis testing — useful when you want to *correct* (not just score) admixture by removing molecules of selected (factor, cell-type) pairs.
-- **Larger panels and more cells**: NMF and CRF stages run in JAX, so scaling to tissue-wide datasets primarily benefits from a GPU. The R reference handles ≲100k molecules well; this port targets ≳1M.
+- **Larger panels and more cells**: NMF and CRF stages run in JAX, so scaling to tissue-wide datasets benefits from a GPU. Performance has not been benchmarked against the R reference yet.
 
 ### Citation
 

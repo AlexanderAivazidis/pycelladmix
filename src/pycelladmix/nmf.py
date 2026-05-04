@@ -207,7 +207,7 @@ def fit_nmf(
     weighted
         If ``True``, fit weighted least-squares NMF (R's ``ls-nmf``) with
         ``Z[i, j] = 1 / colsum(X)[j]`` broadcast across rows. If ``False``, fit
-        Frobenius NMF (faster, sklearn-equivalent).
+        Frobenius NMF (sklearn-equivalent loss; cheaper updates).
     eps
         Small constant added to denominators / used in initialisation.
 

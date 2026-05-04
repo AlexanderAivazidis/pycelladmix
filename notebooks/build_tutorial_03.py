@@ -152,7 +152,7 @@ cells.append(
     nbf.v4.new_markdown_cell(
         """## 3. Run the cellAdmix pipeline
 
-We run a moderate-sized configuration: rank-`k=8` NMF (more than the number of cell classes, to leave room for residual factors), 5 random restarts, 200 NMF iterations, 100 BP iterations. On a CPU this finishes in a few minutes; on an H100/A100 in well under a minute.
+We run a moderate-sized configuration: rank-`k=8` NMF (more than the number of cell classes, to leave room for residual factors), 5 random restarts, 200 NMF iterations, 100 BP iterations. The wall-clock timing for the run is captured by the `%%time` magic below.
 
 For the scoring stage we **build the scRNA reference from the same dataset** by holding out a random 30 % of cells per class — a standard trick when an external reference is unavailable. In a real workflow you would supply an independent scRNA-seq dataset.
 """
