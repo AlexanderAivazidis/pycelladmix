@@ -60,11 +60,12 @@ res.contamination.cell_admixture_fractions      # per-cell admixture score
 res.contamination.contamination_probs           # per-gene per-cell-type P(contamination)
 ```
 
-Three executed end-to-end tutorials are bundled, including a validation on real MERFISH data:
+Four executed end-to-end tutorials are bundled, including a validation on real MERFISH data and a scale-mode workflow for large panels:
 
 - [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) — synthetic 3-cell-type data with simulated admixture; verifies the contaminated cells are recovered.
 - [`notebooks/02_factor_annotation.ipynb`](notebooks/02_factor_annotation.ipynb) — marker-enrichment permutation test for identifying admixture factors *without* an scRNA-seq reference.
 - [`notebooks/03_real_data_merfish.ipynb`](notebooks/03_real_data_merfish.ipynb) — real MERFISH mouse hypothalamus data (Moffitt et al. 2018, fetched via `squidpy.datasets.merfish`); validates that the unsupervised pipeline recovers the published cell-class structure.
+- [`notebooks/04_scale_workflow.ipynb`](notebooks/04_scale_workflow.ipynb) — **subsample-and-project workflow for large panels** (e.g. Xenium 5k × 2 M cells). Fits NMF on a representative subsample, projects per-molecule loadings on the full transcript table, aggregates into a per-cell admixture prior `W_admix`, and produces a cleaned counts matrix ready to feed into Stormi / scanpy. Demonstrated end-to-end on the full 1.4 M-molecule MERFISH slice.
 
 ## Credits
 
