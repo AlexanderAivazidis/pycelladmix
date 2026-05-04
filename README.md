@@ -16,14 +16,18 @@ For small datasets where speed is not a concern, the [original R package](https:
 
 ## Installation
 
-`pycelladmix` requires a **CUDA 12-capable GPU** for the default install. JAX with the CUDA 12 wheel is pulled in automatically on Linux x86_64.
-
 ```bash
-pip install pycelladmix       # not yet on PyPI
-# or, from source:
+# CPU-only (works anywhere; fine for small datasets and trying it out):
+pip install pycelladmix
+
+# GPU (recommended for real datasets — pulls jax[cuda12], Linux x86_64 only):
+pip install "pycelladmix[gpu]"
+
+# from source with uv:
 git clone https://github.com/AlexanderAivazidis/pycelladmix
 cd pycelladmix
-uv sync
+uv sync                 # CPU
+uv sync --extra gpu     # GPU
 ```
 
 ## Quickstart

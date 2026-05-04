@@ -1,26 +1,29 @@
 # Installation
 
-`pycelladmix` is GPU-first: the default install pulls JAX with the CUDA 12 wheel on Linux x86_64. The package is intended for high-performance use on GPU clusters; for small-scale work the [original R package](https://github.com/kharchenkolab/cellAdmix) is recommended.
+## From PyPI
+
+```bash
+# CPU-only (works on any platform):
+pip install pycelladmix
+
+# GPU (recommended for real datasets, Linux x86_64 only):
+pip install "pycelladmix[gpu]"
+```
+
+The default install pulls plain JAX (CPU). Add the `[gpu]` extra to bring in `jax[cuda12]` for GPU acceleration. The package is intended primarily for high-performance use on GPU clusters; for small-scale work the [original R package](https://github.com/kharchenkolab/cellAdmix) is also a fine choice.
 
 ## Requirements
 
-- Linux x86_64 with a **CUDA 12-capable NVIDIA GPU** (H100 / A100 / RTX 6000 / L40s).
 - Python 3.10 – 3.12.
-
-## From PyPI
-
-*Not yet released.*
-
-```bash
-pip install pycelladmix
-```
+- For the `[gpu]` extra: Linux x86_64 with a **CUDA 12-capable NVIDIA GPU** (H100 / A100 / RTX 6000 / L40s).
 
 ## From source
 
 ```bash
 git clone https://github.com/AlexanderAivazidis/pycelladmix
 cd pycelladmix
-uv sync
+uv sync                 # CPU
+uv sync --extra gpu     # GPU
 ```
 
 ## Development install

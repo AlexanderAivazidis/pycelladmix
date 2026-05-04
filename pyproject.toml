@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pycelladmix"
-version = "0.0.1"
+version = "0.1.0"
 description = "Python port of cellAdmix — identify and correct cell admixtures in imaging-based spatial transcriptomics."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -42,14 +42,15 @@ dependencies = [
     "matplotlib>=3.7",
     "seaborn>=0.13",
     "tqdm>=4.65",
-    # JAX: GPU wheel on Linux x86_64, plain JAX elsewhere.
-    "jax>=0.4.35; platform_system!='Linux' or platform_machine!='x86_64'",
-    "jax[cuda12]>=0.4.35; platform_system=='Linux' and platform_machine=='x86_64'",
+    "jax>=0.4.35",
     "jaxtyping>=0.2.36",
     "numpyro>=0.18.0",
 ]
 
 [project.optional-dependencies]
+gpu = [
+    "jax[cuda12]>=0.4.35; platform_system=='Linux' and platform_machine=='x86_64'",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
