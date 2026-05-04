@@ -19,6 +19,8 @@ The pipeline runs in four stages, all numerically heavy ones in **JAX** (GPU-fir
 
 installation
 tutorials/01_quickstart
+tutorials/02_factor_annotation
+tutorials/03_real_data_merfish
 api
 ```
 
